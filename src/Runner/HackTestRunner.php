@@ -16,6 +16,7 @@ abstract final class HackTestRunner {
 
   public static async function runAsync(
     shape(
+      'mode' => ExecutionMode,
       'paths' => vec<string>,
       'pattern' => ?string,
       'writer' => (function(TestResult): Awaitable<void>),
@@ -35,11 +36,15 @@ abstract final class HackTestRunner {
         continue;
       }
       $test_case = new $classname();
-      /* HHAST_IGNORE_ERROR[DontAwaitInALoop] */
-      $errors[$classname] = await $test_case->runTestsAsync(
-        $options['pattern'],
-        $options['writer'],
-      );
+      switch($options['mode']) {
+        case ExecutionMode::RUN:
+          /* HHAST_IGNORE_ERROR[DontAwaitInALoop] */
+          $errors[$classname] = await $test_case->runTestsAsync($options['pattern'], $options['writer']);
+          break;
+        case ExecutionMode::LIST:
+          $errors[$classname] = $test_case->listTests($options['pattern']);
+          break;
+      }
     }
     return $errors;
   }

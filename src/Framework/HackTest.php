@@ -231,6 +231,16 @@ class HackTest {
     return $errors;
   }
 
+  public final function listTests(
+    ?string $pattern,
+  ): dict<string, ?\Throwable> {
+    $tests = dict[];
+    foreach ($this->getTestMethods($pattern) as $method) {
+      $tests[$method->name] = new SkippedTestException();
+    }
+    return $tests;
+  }
+
   private final function filterTestMethods(): void {
     $methods = vec[];
     foreach ($this->methods as $method) {

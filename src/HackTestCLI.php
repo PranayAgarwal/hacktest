@@ -19,6 +19,7 @@ final class HackTestCLI extends CLIWithRequiredArguments {
 
   private bool $verbose = false;
   private ?string $pattern = null;
+  private ExecutionMode $mode = ExecutionMode::RUN;
 
   <<__Override>>
   public static function getHelpTextForRequiredArguments(): vec<string> {
@@ -32,7 +33,7 @@ final class HackTestCLI extends CLIWithRequiredArguments {
         () ==> {
           $this->verbose = true;
         },
-        "Increase output verbosity",
+        'Increase output verbosity',
         '--verbose',
         '-v',
       ),
@@ -44,6 +45,15 @@ final class HackTestCLI extends CLIWithRequiredArguments {
         '--name',
         '-n',
       ),
+      CLIOptions\with_required_enum(
+        ExecutionMode::class,
+        ($value) ==> {
+          $this->mode = $value;
+        },
+        'The test execution mode ('.Str\join(ExecutionMode::getValues(), '|').'). Default: '.$this->mode,
+        '--mode',
+        '-m',
+      ),
     ];
   }
 
@@ -51,6 +61,7 @@ final class HackTestCLI extends CLIWithRequiredArguments {
   public async function mainAsync(): Awaitable<int> {
     $errors = await HackTestRunner::runAsync(
       shape(
+        'mode' => $this->mode,
         'paths' => $this->getArguments(),
         'pattern' => $this->pattern,
         'writer' => async $result ==> await $this->writeProgressAsync($result),
